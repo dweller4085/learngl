@@ -12,6 +12,7 @@ cl.exe ^
 /Od ^
 /Zi ^
 /MDd ^
+/EHsc ^
 /I"lib\\mkb\\include" ^
 /I"lib\\glad\\include" ^
 /I"lib\\glfw\\include" ^
