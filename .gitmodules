@@ -1,0 +1,6 @@
+[submodule "lib/mkb"]
+	path = lib/mkb
+	url = https://github.com/dweller4085/mkb
+[submodule "lib/glfw"]
+	path = lib/glfw
+	url = https://github.com/glfw/glfw
