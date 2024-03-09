@@ -1,5 +1,6 @@
 
 #include <cstdio>
+#include <cmath>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <mkb/base.hh>
@@ -7,43 +8,95 @@
 constexpr int screen_width = 640;
 constexpr int screen_height = 480;
 
+struct vec3 {
+    union {
+        struct {
+            float x;
+            float y;
+            float z;
+        };
+        
+        struct {
+            float r;
+            float g;
+            float b;
+        };
+        
+        float p[3];
+    };
+};
+
+struct vec4 {
+    union {
+        struct {
+            float x;
+            float y;
+            float z;
+            float w;
+        };
+        
+        struct {
+            float r;
+            float g;
+            float b;
+            float a;
+        };
+        
+        float p[4];
+    };
+};
+
+struct t_vertex {
+    vec3 pos;
+    vec3 color;
+};
+
 namespace {
     const char * vertex_shader_src = R"(
         #version 450 core
+        
         layout (location = 0) in vec3 pos;
+        layout (location = 1) in vec3 in_color;
+        
+        out vec3 color;
         
         void main() {
-            gl_Position = vec4(pos.x, pos.y, pos.z, 1.0);
+            gl_Position = vec4(pos, 1.0);
+            color = in_color;
         }
     )";
     
     const char * fragment_shader_src = R"(
         #version 450 core
-        out vec4 color;
+        
+        in vec3 color;
+        out vec4 out_color;
         
         void main() {
-            color = vec4(1.0, 0.5, 0.2, 1.0);
+            out_color = vec4(color, 1.0);
         }
     )";
+    
+    t_vertex vertices[] = {
+        { .pos =  { -0.5f, -0.5f, 0.0f, }, .color = { 1.0f, 0.0f, 0.0f } },
+        { .pos =  { 0.5f, -0.5f, 0.0f, },  .color = { 0.0f, 1.0f, 0.0f } },
+        { .pos =  { 0.0f, 0.5f, 0.0f, },   .color = { 0.0f, 0.0f, 1.0f } },
+    };
 }
 
 function main(int argc, char ** argv) -> int {
     m_assert(glfwInit());
+    
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     
     let window = glfwCreateWindow(screen_width, screen_height, "learngl", null, null);
+    
     glfwMakeContextCurrent(window);
     
     m_assert(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress));
-    
-    float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-        0.0f, 0.5f, 0.0f,
-    };
     
     uint shader_program = [] {
         uint vertex_shader = 0; {
@@ -94,8 +147,12 @@ function main(int argc, char ** argv) -> int {
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+            
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (sizeof(vec3)));
+            
             glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
             
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
@@ -108,10 +165,16 @@ function main(int argc, char ** argv) -> int {
             glfwSetWindowShouldClose(window, true);
         }
         
+        float t = glfwGetTime();
+        float green = (std::sinf(t) / 2.f ) + 0.5f;
+        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         
         glUseProgram(shader_program);
+        
+        glUniform4f(glGetUniformLocation(shader_program, "color"), 0.f, green, 0.f, 1.f);
+        
         glBindVertexArray(vao);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         
