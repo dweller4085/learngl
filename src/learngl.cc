@@ -1,8 +1,15 @@
+
 #include <cstdio>
 #include <cmath>
+
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #include <stb/stb_image.h>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "learngl.hh"
 
@@ -15,15 +22,12 @@ namespace {
         #version 450 core
         
         layout (location = 0) in vec3 v_pos;
-        layout (location = 1) in vec3 v_color;
-        layout (location = 2) in vec2 v_tex;
-        
-        out vec3 f_color;
+        layout (location = 1) in vec2 v_tex;
         out vec2 f_tex;
+        uniform mat4 transform;
         
         void main() {
-            gl_Position = vec4(v_pos, 1.0);
-            f_color = v_color;
+            gl_Position = transform * vec4(v_pos, 1.0);
             f_tex = v_tex;
         }
     )";
@@ -31,23 +35,20 @@ namespace {
     const char * fragment_shader_src = R"(
         #version 450 core
         
-        in vec3 f_color;
         in vec2 f_tex;
-        
-        out vec4 out_color;
-        
+        out vec4 color;
         uniform sampler2D f_texture;
         
         void main() {
-            out_color = texture(f_texture, f_tex);
+            color = texture(f_texture, f_tex);
         }
     )";
     
     t_vertex vertices[] = {
-        { .pos =  {  0.5f,  0.5f, 0.0f }, .color = { 1.0f, 0.0f, 0.0f }, .tex = { 1.0f, 1.0f } },
-        { .pos =  {  0.5f, -0.5f, 0.0f }, .color = { 0.0f, 1.0f, 0.0f }, .tex = { 1.0f, 0.0f } },
-        { .pos =  { -0.5f, -0.5f, 0.0f }, .color = { 0.0f, 0.0f, 1.0f }, .tex = { 0.0f, 0.0f } },
-        { .pos =  { -0.5f,  0.5f, 0.0f }, .color = { 1.0f, 1.0f, 0.0f }, .tex = { 0.0f, 1.0f } },
+        { .pos =  {  0.5f,  0.5f, 0.0f }, .tex = { 1.0f, 1.0f } },
+        { .pos =  {  0.5f, -0.5f, 0.0f }, .tex = { 1.0f, 0.0f } },
+        { .pos =  { -0.5f, -0.5f, 0.0f }, .tex = { 0.0f, 0.0f } },
+        { .pos =  { -0.5f,  0.5f, 0.0f }, .tex = { 0.0f, 1.0f } },
     };
     
     uint indices[] = {
@@ -134,12 +135,10 @@ function main(int argc, char ** argv) -> int {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
             
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
-            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (sizeof(vec3)));
-            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (2 * sizeof(vec3)));
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (1 * sizeof(vec3)));
             
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
-            glEnableVertexAttribArray(2);
             
             glBindBuffer(GL_ARRAY_BUFFER, 0);
         }
@@ -177,6 +176,9 @@ function main(int argc, char ** argv) -> int {
             glfwSetWindowShouldClose(window, true);
         }
         
+        let transform = glm::mat4 { 1.0f };
+        transform = glm::rotate(transform, (float) glfwGetTime(), glm::vec3 { 0.f, 0.f, 1.f });
+        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
         
@@ -184,6 +186,8 @@ function main(int argc, char ** argv) -> int {
         glBindTexture(GL_TEXTURE_2D, texture);
         
         glUseProgram(shader_program);
+        
+        glUniformMatrix4fv(glGetUniformLocation(shader_program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
         
         glBindVertexArray(vao);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

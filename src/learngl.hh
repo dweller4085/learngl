@@ -29,7 +29,6 @@ struct vec4 {
 
 struct t_vertex {
     vec3 pos;
-    vec3 color;
     vec2 tex;
 };
 
