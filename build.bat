@@ -16,7 +16,9 @@ cl.exe ^
 /I"lib\\mkb\\include" ^
 /I"lib\\glad\\include" ^
 /I"lib\\glfw\\include" ^
+/I"lib\\stb\\include" ^
 lib\glad\src\glad.c ^
+lib\stb\src\stb_image.c ^
 src\*.cc ^
 /Fo"bin\\" ^
 /Fd"bin\\"
