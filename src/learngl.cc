@@ -14,29 +14,36 @@
 #include "learngl.hh"
 
 namespace {
-    
     constexpr int screen_width = 640;
     constexpr int screen_height = 480;
     
-    const char * vertex_shader_src = R"(
+    char const * box_texture_path = "w:\\learngl\\resources\\box.jpg";
+    
+    char const * vertex_shader_src = R"(
         #version 450 core
         
         layout (location = 0) in vec3 v_pos;
         layout (location = 1) in vec2 v_tex;
+        
         out vec2 f_tex;
-        uniform mat4 transform;
+        
+        uniform mat4 model;
+        uniform mat4 view;
+        uniform mat4 projection;
         
         void main() {
-            gl_Position = transform * vec4(v_pos, 1.0);
+            gl_Position = projection * view * model * vec4(v_pos, 1.0);
             f_tex = v_tex;
         }
     )";
     
-    const char * fragment_shader_src = R"(
+    char const * fragment_shader_src = R"(
         #version 450 core
         
         in vec2 f_tex;
+        
         out vec4 color;
+        
         uniform sampler2D f_texture;
         
         void main() {
@@ -44,21 +51,68 @@ namespace {
         }
     )";
     
-    t_vertex vertices[] = {
-        { .pos =  {  0.5f,  0.5f, 0.0f }, .tex = { 1.0f, 1.0f } },
-        { .pos =  {  0.5f, -0.5f, 0.0f }, .tex = { 1.0f, 0.0f } },
-        { .pos =  { -0.5f, -0.5f, 0.0f }, .tex = { 0.0f, 0.0f } },
-        { .pos =  { -0.5f,  0.5f, 0.0f }, .tex = { 0.0f, 1.0f } },
+    float vertices[] = {
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
     };
     
-    uint indices[] = {
-        0, 1, 3,
-        1, 2, 3,
+    constexpr int cube_count = 10;
+    
+    glm::vec3 cube_positions [cube_count] = {
+        glm::vec3( 0.0f,  0.0f,  0.0f),
+        glm::vec3( 2.0f,  5.0f, -15.0f),
+        glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f),
+        glm::vec3( 2.4f, -0.4f, -3.5f),
+        glm::vec3(-1.7f,  3.0f, -7.5f),
+        glm::vec3( 1.3f, -2.0f, -2.5f),
+        glm::vec3( 1.5f,  2.0f, -2.5f),
+        glm::vec3( 1.5f,  0.2f, -1.5f),
+        glm::vec3(-1.3f,  1.0f, -1.5f),
     };
+    
 }
 
 function main(int argc, char ** argv) -> int {
-    
     m_assert(glfwInit());
     
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -72,10 +126,10 @@ function main(int argc, char ** argv) -> int {
     
     m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
     
-    uint shader_program = [] {
-        
+    glEnable(GL_DEPTH_TEST);
+    
+    let shader_program = [] {
         let vertex_shader = [] {
-            
             let vertex_shader = glCreateShader(GL_VERTEX_SHADER);
             glShaderSource(vertex_shader, 1, &vertex_shader_src, null);
             glCompileShader(vertex_shader);
@@ -86,9 +140,8 @@ function main(int argc, char ** argv) -> int {
             
             return vertex_shader;
         } ();
-
+        
         let fragment_shader = [] {
-            
             let fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
             glShaderSource(fragment_shader, 1, &fragment_shader_src, null);
             glCompileShader(fragment_shader);
@@ -119,7 +172,6 @@ function main(int argc, char ** argv) -> int {
     
     uint vbo = 0;
     uint vao = 0;
-    uint ebo = 0;
     
     {
         glGenVertexArrays(1, &vao);
@@ -129,10 +181,6 @@ function main(int argc, char ** argv) -> int {
             glGenBuffers(1, &vbo);
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-            
-            glGenBuffers(1, &ebo);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
             
             glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
             glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (1 * sizeof(vec3)));
@@ -145,8 +193,8 @@ function main(int argc, char ** argv) -> int {
         
         glBindVertexArray(0);
     }
-
-    uint texture = [=] {
+    
+    let texture = [=] {
         uint texture = 0;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
@@ -157,12 +205,13 @@ function main(int argc, char ** argv) -> int {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         
         int width, height, n_channels;
-        let data = stbi_load("w:\\learngl\\resources\\box.jpg", &width, &height, &n_channels, 0);
+        let data = stbi_load(box_texture_path, &width, &height, &n_channels, 0);
         m_assert(data);
         
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
         
+        glUseProgram(shader_program);
         glUniform1i(glGetUniformLocation(shader_program, "f_texture"), 0);
         
         stbi_image_free(data);
@@ -170,27 +219,43 @@ function main(int argc, char ** argv) -> int {
         return texture;
     } ();
     
+    
+    glUniformMatrix4fv (
+        glGetUniformLocation(shader_program, "projection"), 1, GL_FALSE,
+        glm::value_ptr(glm::perspective(glm::radians(45.0f), (float )screen_width / (float) screen_height, 0.1f, 100.0f))
+    );
+    
     while (!glfwWindowShouldClose(window)) {
-        
         if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
             glfwSetWindowShouldClose(window, true);
         }
         
-        let transform = glm::mat4 { 1.0f };
-        transform = glm::rotate(transform, (float) glfwGetTime(), glm::vec3 { 0.f, 0.f, 1.f });
-        
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
         
         glUseProgram(shader_program);
         
-        glUniformMatrix4fv(glGetUniformLocation(shader_program, "transform"), 1, GL_FALSE, glm::value_ptr(transform));
+        let view = glm::mat4 { 1.f };
+        view = glm::translate(view, { 0, 0, -3.f });
+        
+        glUniformMatrix4fv(glGetUniformLocation(shader_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
         
         glBindVertexArray(vao);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        
+        for (int i = 0; i < cube_count; i += 1) {
+            let model = glm::mat4 { 1.0f };
+            
+            model = glm::translate(model, cube_positions[i]);
+            model = glm::rotate(model, glm::radians(20.0f * i), { 1.0f, 0.3f, 0.5f });
+            model = glm::rotate(model, static_cast<float>(glfwGetTime()), { 0.f, 0.f, 1.f });
+            
+            glUniformMatrix4fv(glGetUniformLocation(shader_program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+            glDrawArrays(GL_TRIANGLES, 0, 36);
+        }
         
         glfwSwapBuffers(window);
         glfwPollEvents();

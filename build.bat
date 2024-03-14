@@ -19,7 +19,6 @@ cl.exe ^
 /I"lib\\stb\\include" ^
 /I"lib\\glm\\" ^
 lib\glad\src\glad.c ^
-lib\stb\src\stb_image.c ^
 src\*.cc ^
 /Fo"bin\\" ^
 /Fd"bin\\"
@@ -28,7 +27,8 @@ link.exe ^
 /nologo ^
 /debug:full ^
 /libpath:"lib\\glfw\\build\\src\\Debug" ^
-/libpath:"lib\\glm\\bin" ^
+/libpath:"lib\\glm\\build\\glm\\Debug" ^
+/libpath:"lib\\stb\\bin\\" ^
 /machine:x64 ^
 /pdb:"bin\\%name%.pdb" ^
 /out:"bin\\%name%.exe" ^
@@ -42,5 +42,5 @@ user32.lib ^
 opengl32.lib ^
 glfw3.lib ^
 glm.lib ^
+stb_image.lib ^
 bin\*.obj
-
