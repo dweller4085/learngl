@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/vec3.hpp>
 
 #include "learngl.hh"
 
@@ -17,7 +18,7 @@ namespace {
     constexpr int screen_width = 640;
     constexpr int screen_height = 480;
     
-    char const * box_texture_path = "w:\\learngl\\resources\\box.jpg";
+    char const * box_texture_path = "w:\\learngl\\resources\\tile.jpg";
     
     char const * vertex_shader_src = R"(
         #version 450 core
@@ -52,47 +53,47 @@ namespace {
     )";
     
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
+        1.0f, -1.0f, -1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+        -1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+        1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f,  1.0f, 1.0f,
+        1.0f,  1.0f,  1.0f,  1.0f, 1.0f,
+        -1.0f,  1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+        -1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,  1.0f, 1.0f,
+        1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
+        1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
+        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
+        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
+        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
+        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
+        -1.0f,  1.0f,  1.0f,  0.0f, 0.0f,
+        -1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
     };
     
     constexpr int cube_count = 10;
@@ -110,6 +111,18 @@ namespace {
         glm::vec3(-1.3f,  1.0f, -1.5f),
     };
     
+    struct t_camera {
+        glm::vec3 position;
+        glm::vec3 velocity;
+        glm::vec3 front;
+        glm::vec3 up;
+        
+        float pitch;
+        float yaw;
+        float speed;
+        float accel;
+        float decel;
+    };
 }
 
 function main(int argc, char ** argv) -> int {
@@ -123,6 +136,12 @@ function main(int argc, char ** argv) -> int {
     let window = glfwCreateWindow(screen_width, screen_height, "learngl", null, null);
     
     glfwMakeContextCurrent(window);
+    glfwSwapInterval(1);
+    
+    // let monitor = glfwGetPrimaryMonitor();
+    // let mode = glfwGetVideoMode(monitor);
+    // glfwSetWindowMonitor(window, monitor, 0, 0, screen_width, screen_height, mode->refreshRate);
+    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
     
     m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
     
@@ -182,8 +201,8 @@ function main(int argc, char ** argv) -> int {
             glBindBuffer(GL_ARRAY_BUFFER, vbo);
             glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
             
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (1 * sizeof(vec3)));
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *) 0);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *) (3 * sizeof(float)));
             
             glEnableVertexAttribArray(0);
             glEnableVertexAttribArray(1);
@@ -225,9 +244,51 @@ function main(int argc, char ** argv) -> int {
         glm::value_ptr(glm::perspective(glm::radians(45.0f), (float )screen_width / (float) screen_height, 0.1f, 100.0f))
     );
     
+    float dt = 1.f / 60.f;
+    float pt = static_cast<float>(glfwGetTime());
+    
+    let camera = t_camera {
+        .position = { 0.f, 0.f, 4.f },
+        .velocity = { 0.f, 0.f, 0.f },
+        .front = { 0.f, 0.f, -1.f },
+        .up = { 0.f, 1.f, 0.f },
+        .pitch = 0.f,
+        .yaw = -1.f / 4.f,
+        .speed = 6.f,
+        .accel = 50.f,
+        .decel = 40.f,
+    };
+    
     while (!glfwWindowShouldClose(window)) {
-        if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-            glfwSetWindowShouldClose(window, true);
+        glfwPollEvents();
+        
+        {
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+                glfwSetWindowShouldClose(window, true);
+            }
+            
+            let dir = glm::vec3 { 0.f, 0.f, 0.f };
+            
+            dir += camera.front * (float) (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
+            dir -= camera.front * (float) (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
+            dir += glm::normalize(glm::cross(camera.front, camera.up)) * (float) (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
+            dir -= glm::normalize(glm::cross(camera.front, camera.up)) * (float) (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
+            
+            dir = (glm::length(dir) == 0.f) ? glm::vec3 { 0.f } : glm::normalize(dir);
+            
+            camera.velocity += dir * camera.accel * dt;
+            
+            let speed = glm::length(camera.velocity);
+            
+            if (speed != 0.f) {
+                if (glm::length(dir) == 0.f) {
+                    speed = m_clamp_below(speed - camera.decel * dt, 0.f);
+                }
+                
+                camera.velocity = glm::normalize(camera.velocity) * m_clamp_above(speed, camera.speed);
+            }
+            
+            camera.position += camera.velocity * dt;
         }
         
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -239,7 +300,12 @@ function main(int argc, char ** argv) -> int {
         glUseProgram(shader_program);
         
         let view = glm::mat4 { 1.f };
-        view = glm::translate(view, { 0, 0, -3.f });
+        
+        view = glm::lookAt (
+            camera.position,
+            camera.position + camera.front,
+            camera.up
+        );
         
         glUniformMatrix4fv(glGetUniformLocation(shader_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
         
@@ -249,6 +315,7 @@ function main(int argc, char ** argv) -> int {
             let model = glm::mat4 { 1.0f };
             
             model = glm::translate(model, cube_positions[i]);
+            model = glm::scale(model, { 0.5f, 0.5f, 0.5f });
             model = glm::rotate(model, glm::radians(20.0f * i), { 1.0f, 0.3f, 0.5f });
             model = glm::rotate(model, static_cast<float>(glfwGetTime()), { 0.f, 0.f, 1.f });
             
@@ -258,7 +325,10 @@ function main(int argc, char ** argv) -> int {
         }
         
         glfwSwapBuffers(window);
-        glfwPollEvents();
+        
+        let t = static_cast<float>(glfwGetTime());
+        dt = t - pt;
+        pt = t;
     }
     
     glDeleteVertexArrays(1, &vao);
