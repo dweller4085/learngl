@@ -14,282 +14,136 @@
 
 #include "learngl.hh"
 
-namespace {
-    constexpr int screen_width = 640;
-    constexpr int screen_height = 480;
-    
-    char const * box_texture_path = "w:\\learngl\\resources\\tile.jpg";
-    
-    char const * vertex_shader_src = R"(
-        #version 450 core
-        
-        layout (location = 0) in vec3 v_pos;
-        layout (location = 1) in vec2 v_tex;
-        
-        out vec2 f_tex;
-        
-        uniform mat4 model;
-        uniform mat4 view;
-        uniform mat4 projection;
-        
-        void main() {
-            gl_Position = projection * view * model * vec4(v_pos, 1.0);
-            f_tex = v_tex;
-        }
-    )";
-    
-    char const * fragment_shader_src = R"(
-        #version 450 core
-        
-        in vec2 f_tex;
-        
-        out vec4 color;
-        
-        uniform sampler2D f_texture;
-        
-        void main() {
-            color = texture(f_texture, f_tex);
-        }
-    )";
-    
-    float vertices[] = {
-        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
-        1.0f, -1.0f, -1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
-        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
-        -1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,  0.0f, 0.0f,
+using glm::mat4, glm::vec3, glm::vec2;
 
-        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
-        1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f,  1.0f, 1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f, 1.0f,
-        -1.0f,  1.0f,  1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
 
-        -1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
-        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
-        -1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
 
-        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
-        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
-
-        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f, -1.0f, -1.0f,  1.0f, 1.0f,
-        1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
-        1.0f, -1.0f,  1.0f,  1.0f, 0.0f,
-        -1.0f, -1.0f,  1.0f,  0.0f, 0.0f,
-        -1.0f, -1.0f, -1.0f,  0.0f, 1.0f,
-
-        -1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f,  1.0f, -1.0f,  1.0f, 1.0f,
-        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f,  1.0f, 0.0f,
-        -1.0f,  1.0f,  1.0f,  0.0f, 0.0f,
-        -1.0f,  1.0f, -1.0f,  0.0f, 1.0f,
-    };
-    
-    constexpr int cube_count = 10;
-    
-    glm::vec3 cube_positions [cube_count] = {
-        glm::vec3( 0.0f,  0.0f,  0.0f),
-        glm::vec3( 2.0f,  5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3( 2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f,  3.0f, -7.5f),
-        glm::vec3( 1.3f, -2.0f, -2.5f),
-        glm::vec3( 1.5f,  2.0f, -2.5f),
-        glm::vec3( 1.5f,  0.2f, -1.5f),
-        glm::vec3(-1.3f,  1.0f, -1.5f),
-    };
-    
+namespace {   
     struct t_camera {
-        glm::vec3 position;
-        glm::vec3 velocity;
-        glm::vec3 front;
-        glm::vec3 up;
+        constexpr float pitch_limit = 0.25f - 0.005f;
         
+        function update(float dt) -> void;
+        
+        vec3 position;
+        vec3 velocity;
         float pitch;
         float yaw;
-        float speed;
-        float accel;
-        float decel;
+        
+        float max_speed;
+        float accel_rate;
+        float decel_rate;
+        
+        float sensitivity;
+        float fov;
+        
+        mat4 view;
     };
-}
-
-function main(int argc, char ** argv) -> int {
-    m_assert(glfwInit());
     
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    struct t_cursor {
+        static function get_position() -> vec2;
+        bool32 enabled;
+    };
     
-    let window = glfwCreateWindow(screen_width, screen_height, "learngl", null, null);
+    struct t_app {
+        function init() -> void;
+        function update(float dt) -> void;
+        function render() -> void;
+        function run() -> void;
+        function terminate() -> void;
+        
+        t_camera camera;
+        t_cursor cursor;
+        
+        GLFWwindow * window;
+        int width;
+        int height;
+        
+        mat4 projection;
+    };
     
-    glfwMakeContextCurrent(window);
-    glfwSwapInterval(1);
-    
-    // let monitor = glfwGetPrimaryMonitor();
-    // let mode = glfwGetVideoMode(monitor);
-    // glfwSetWindowMonitor(window, monitor, 0, 0, screen_width, screen_height, mode->refreshRate);
-    // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-    
-    m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
-    
-    glEnable(GL_DEPTH_TEST);
-    
-    let shader_program = [] {
-        let vertex_shader = [] {
-            let vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vertex_shader, 1, &vertex_shader_src, null);
-            glCompileShader(vertex_shader);
-            
-            int ok = 0;
-            glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &ok);
-            m_assert(ok);
-            
-            return vertex_shader;
+    function t_app::init() -> void {
+        width = 640;
+        height = 480;
+        
+        cursor.enabled = true;
+        cursor.position = [] {
+            double x, y;
+            glfwGetCursorPos(window, &x, &y);
+            return glm::vec2 { .x = static_cast<float>(x), .y = static_cast<float>(-y) };
         } ();
         
-        let fragment_shader = [] {
-            let fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fragment_shader, 1, &fragment_shader_src, null);
-            glCompileShader(fragment_shader);
-            
-            int ok = 0;
-            glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &ok);
-            m_assert(ok);
-            
-            return fragment_shader;
-        } ();
+        camera = {
+            .position = { 0.f, 0.f, 4.f },
+            .velocity = { 0.f, 0.f, 0.f },
+            .pitch = 0.f,
+            .yaw = 0.f,
+            .max_speed = 8.f,
+            .accel_rate = 80.f,
+            .decel_rate = 120.f,
+            .sensitivity = 2.f,
+            .fov = 90.f;
+        };
         
-        let shader_program = glCreateProgram();
+        projection = glm::perspective(glm::radians(camera.fov / 2.f), (float) width / (float) height, 0.1f, 100.0f);
         
-        glAttachShader(shader_program, vertex_shader);
-        glAttachShader(shader_program, fragment_shader);
-        glLinkProgram(shader_program);
+        m_assert(glfwInit());
         
-        int ok = 0;
-        glGetProgramiv(shader_program, GL_LINK_STATUS, &ok);
-        m_assert(ok);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
         
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
+        window = glfwCreateWindow(width, height, "learngl", null, null);
         
-        return shader_program;
-    } ();
-    
-    
-    uint vbo = 0;
-    uint vao = 0;
-    
-    {
-        glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
+        glfwMakeContextCurrent(window);
+        glfwSwapInterval(1);
         
-        {
-            glGenBuffers(1, &vbo);
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-            
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *) 0);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 5, (void *) (3 * sizeof(float)));
-            
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-        }
+        glfwSetFramebufferSizeCallback(window, [] (GLFWwindow __in *, int width, int height) {
+            glViewport(0, 0, width, height);
+            self.width = width;
+            self.height = height;
+        });
         
-        glBindVertexArray(0);
+        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        // let monitor = glfwGetPrimaryMonitor();
+        // let mode = glfwGetVideoMode(monitor);
+        // glfwSetWindowMonitor(window, monitor, 0, 0, screen_width, screen_height, mode->refreshRate);
+        // glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
+        
+        m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
+        
+        glEnable(GL_DEPTH_TEST);
     }
     
-    let texture = [=] {
-        uint texture = 0;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        int width, height, n_channels;
-        let data = stbi_load(box_texture_path, &width, &height, &n_channels, 0);
-        m_assert(data);
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        
-        glUseProgram(shader_program);
-        glUniform1i(glGetUniformLocation(shader_program, "f_texture"), 0);
-        
-        stbi_image_free(data);
-        
-        return texture;
-    } ();
-    
-    
-    glUniformMatrix4fv (
-        glGetUniformLocation(shader_program, "projection"), 1, GL_FALSE,
-        glm::value_ptr(glm::perspective(glm::radians(45.0f), (float )screen_width / (float) screen_height, 0.1f, 100.0f))
-    );
-    
-    float dt = 1.f / 60.f;
-    float pt = static_cast<float>(glfwGetTime());
-    
-    let camera = t_camera {
-        .position = { 0.f, 0.f, 4.f },
-        .velocity = { 0.f, 0.f, 0.f },
-        .front = { 0.f, 0.f, -1.f },
-        .up = { 0.f, 1.f, 0.f },
-        .pitch = 0.f,
-        .yaw = -1.f / 4.f,
-        .speed = 6.f,
-        .accel = 50.f,
-        .decel = 40.f,
-    };
-    
-    while (!glfwWindowShouldClose(window)) {
-        glfwPollEvents();
-        
-        {
-            if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-                glfwSetWindowShouldClose(window, true);
-            }
-            
-            let dir = glm::vec3 { 0.f, 0.f, 0.f };
-            
-            dir += camera.front * (float) (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS);
-            dir -= camera.front * (float) (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS);
-            dir += glm::normalize(glm::cross(camera.front, camera.up)) * (float) (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS);
-            dir -= glm::normalize(glm::cross(camera.front, camera.up)) * (float) (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS);
-            
-            dir = (glm::length(dir) == 0.f) ? glm::vec3 { 0.f } : glm::normalize(dir);
-            
-            camera.velocity += dir * camera.accel * dt;
-            
-            let speed = glm::length(camera.velocity);
-            
-            if (speed != 0.f) {
-                if (glm::length(dir) == 0.f) {
-                    speed = m_clamp_below(speed - camera.decel * dt, 0.f);
-                }
-                
-                camera.velocity = glm::normalize(camera.velocity) * m_clamp_above(speed, camera.speed);
-            }
-            
-            camera.position += camera.velocity * dt;
+    function t_app::update(float dt) -> void {
+        if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+            glfwSetWindowShouldClose(window, true);
         }
+        
+        camera.update(dt);
+    }
+    
+    function t_app::run() -> void {
+        let t = static_cast<float>(glfwGetTime());
+        let dt = 1.f / 60.f;
+        
+        while (!glfwWindowShouldClose(window)) {
+            update(dt);
+            render();
+            
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+            
+            let now = static_cast<float>(glfwGetTime());
+            dt = t - now;
+            t = now;
+        }
+        
+        terminate();
+    }
+    
+    function t_app::render() -> void {
+        projection = glm::perspective(glm::radians(camera.fov / 2.f), (float) width / (float) height, 0.1f, 100.0f);
         
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -299,21 +153,12 @@ function main(int argc, char ** argv) -> int {
         
         glUseProgram(shader_program);
         
-        let view = glm::mat4 { 1.f };
-        
-        view = glm::lookAt (
-            camera.position,
-            camera.position + camera.front,
-            camera.up
-        );
-        
         glUniformMatrix4fv(glGetUniformLocation(shader_program, "view"), 1, GL_FALSE, glm::value_ptr(view));
         
         glBindVertexArray(vao);
         
         for (int i = 0; i < cube_count; i += 1) {
             let model = glm::mat4 { 1.0f };
-            
             model = glm::translate(model, cube_positions[i]);
             model = glm::scale(model, { 0.5f, 0.5f, 0.5f });
             model = glm::rotate(model, glm::radians(20.0f * i), { 1.0f, 0.3f, 0.5f });
@@ -323,18 +168,73 @@ function main(int argc, char ** argv) -> int {
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
-        
-        glfwSwapBuffers(window);
-        
-        let t = static_cast<float>(glfwGetTime());
-        dt = t - pt;
-        pt = t;
     }
     
-    glDeleteVertexArrays(1, &vao);
-    glDeleteBuffers(1, &vbo);
-    glDeleteProgram(shader_program);
+    function t_app::terminate() -> void {
+        glfwTerminate();
+    }
     
-    glfwTerminate();
-    return 0;
+    function t_cursor::get_position() -> vec2 {
+        double x, y;
+        glfwGetCursorPos(app.window, &x, &y);
+        return { .x = static_cast<float>(x), .y = static_cast<float>(-y) };
+    }
+    
+    function t_camera::update(float dt) -> void {
+        
+        {
+            let static previous = t_cursor::get_position();
+            let current = t_cursor::get_position();
+            
+            let delta = (previous - current) * camera.sensitivity;
+            
+            previous = current;
+            
+            yaw += std::fmodf(delta.x, 1.f);
+            pitch = m_clamp(pitch + delta.y, -pitch_limit, pitch_limit);
+        }
+        
+        let up = vec3 { 0.f, 0.f, 1.f };
+        let right = vec3 { 1.f, 0.f, 0.f };
+        
+        
+            
+        
+        let const right = glm::normalize(glm::cross(front, up));
+        let dir = glm::vec3 { 0.f, 0.f, 0.f };
+        
+        dir += front * (float) (glfwGetKey(app.window, GLFW_KEY_W) == GLFW_PRESS);
+        dir -= front * (float) (glfwGetKey(app.window, GLFW_KEY_S) == GLFW_PRESS);
+        dir += right * (float) (glfwGetKey(app.window, GLFW_KEY_D) == GLFW_PRESS);
+        dir -= right * (float) (glfwGetKey(app.window, GLFW_KEY_A) == GLFW_PRESS);
+        
+        dir = (glm::length(dir) == 0.f) ? glm::vec3 { 0.f } : glm::normalize(dir);
+        
+        velocity += dir * accel_rate * dt;
+        
+        let speed = glm::length(velocity);
+        
+        if (speed != 0.f) {
+            if (glm::length(dir) == 0.f) {
+                speed = m_clamp_below(speed - decel_rate * dt, 0.f);
+            }
+            
+            velocity = glm::normalize(velocity) * m_clamp_above(max_speed, speed);
+        }
+        
+        position += velocity * dt;
+        
+        view = glm::lookAt (
+            position,
+            position + front,
+            up
+        );
+    }
+    
+    t_app app;
+}
+
+function main(int argc, char ** argv) -> int {
+    app.init();
+    app.run();
 }
