@@ -18,10 +18,11 @@ cl.exe ^
 /I"lib\\glfw\\include" ^
 /I"lib\\stb\\include" ^
 /I"lib\\glm\\" ^
-lib\glad\src\glad.c ^
 src\*.cc ^
 /Fo"bin\\" ^
 /Fd"bin\\"
+
+rem lib\glad\src\glad.c ^
 
 link.exe ^
 /nologo ^
