@@ -11,10 +11,6 @@
 
 #include <mkb/base.hh>
 
-constexpr float pi =  3.14159265359f;
-constexpr float tau = 6.28318530717f;
-constexpr float epsilon = std::numeric_limits<float>::epsilon();
-
 using glm::vec2, glm::vec3, glm::vec4, glm::mat4;
 
 #endif // __learngl_common__
