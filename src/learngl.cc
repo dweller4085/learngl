@@ -9,7 +9,10 @@
 
 #include "common.hh"
 
-namespace {   
+namespace {
+    
+    constexpr float magic_mouse_sensitivity_constant = 0.0005f;
+    
     struct t_camera {
         static constexpr float max_pitch = 0.25f - 1.f / 256.f;
         
@@ -17,6 +20,7 @@ namespace {
         
         vec3 position;
         vec3 velocity;
+        
         float pitch;
         float yaw;
         
@@ -27,20 +31,25 @@ namespace {
         float sensitivity;
         float fov;
         
+        bool32 can_move;
+        
         mat4 view;
     };
     
     struct t_cursor {
         static function get_position() -> vec2;
-        bool32 enabled;
+        bool32 is_enabled;
     };
     
     struct t_app {
+        static function on_key_event(GLFWwindow __in *, int key, int scancode, int action, int mods) -> void;
+        
         function init() -> void;
         function update(float dt) -> void;
         function render() -> void;
         function run() -> void;
         function terminate() -> void;
+        
         
         t_camera camera;
         t_cursor cursor;
@@ -70,23 +79,41 @@ namespace {
     t_app app;
 }
 
+function ::t_app::on_key_event(GLFWwindow __in * window, int key, int scancode, int action, int mods) -> void {
+    vec2 static last_pos = t_cursor::get_position();
+    
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+        if (app.cursor.is_enabled) {
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            glfwSetCursorPos(window, last_pos.x, last_pos.y);
+        } else {
+            last_pos = t_cursor::get_position();
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        }
+        
+        app.cursor.is_enabled ^= 1;
+        app.camera.can_move ^= 1;
+    }
+}
 
 function ::t_app::init() -> void {
     width = 640;
     height = 480;
     
-    cursor.enabled = true;
+    cursor.is_enabled = false;
     
     camera = {
         .position = { 0.f, 0.f, 0.f },
         .velocity = { 0.f, 0.f, 0.f },
         .pitch = 0.f,
         .yaw = 0.f,
-        .max_speed = 3.f,
+        .max_speed = 4.f,
         .accel_rate = 100.f,
         .decel_rate = 50.f,
-        .sensitivity = 0.0005f,
+        .sensitivity = 1.f,
         .fov = 90.f,
+        .can_move = true,
+        .view = fps_view({ 0.f, 0.f, 0.f }, 0.f, 0.f),
     };
     
     m_assert(glfwInit());
@@ -106,6 +133,8 @@ function ::t_app::init() -> void {
         app.width = width;
         app.height = height;
     });
+    
+    glfwSetKeyCallback(window, t_app::on_key_event);
     
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // let monitor = glfwGetPrimaryMonitor();
@@ -288,10 +317,6 @@ function ::t_app::init() -> void {
 }
 
 function ::t_app::update(float dt) -> void {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, true);
-    }
-    
     camera.update(dt);
 }
 
@@ -350,15 +375,17 @@ function ::t_cursor::get_position() -> vec2 {
 }
 
 function ::t_camera::update(float dt) -> void {
+    if (!can_move) return;
+    
     { // update pitch and yaw angle values
         let static previous = t_cursor::get_position();
         let current = t_cursor::get_position();
         
-        let delta = (current - previous) * sensitivity;
+        let delta = (current - previous) * magic_mouse_sensitivity_constant * sensitivity;
         
         previous = current;
         
-        //
+        // filter the delta
         int static i = 0;
         vec2 static filter_buffer[2] = {};
         
