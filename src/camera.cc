@@ -3,12 +3,9 @@
 #include <glfw/glfw3.h>
 
 #include "app.hh"
+#include "camera.hh"
 
 namespace {
-    constexpr float pi =  3.14159265359f;
-    constexpr float tau = 6.28318530717f;
-    constexpr float epsilon = std::numeric_limits<float>::epsilon();
-    
     inline function fps_view_transform(vec3 position, float pitch, float yaw) -> mat4 {
         let transform = glm::identity<mat4>();
         transform = glm::translate(transform, position);

@@ -1,5 +1,5 @@
 #ifndef __learngl_camera__
-#define __learngl_camera___
+#define __learngl_camera__
 
 #include "common.hh"
 

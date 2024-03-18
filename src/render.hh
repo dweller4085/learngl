@@ -1,7 +1,8 @@
 #ifndef __learngl_render__
-#define __learngl_render___
+#define __learngl_render__
 
 #include "camera.hh"
+#include "common.hh"
 
 struct t_vertex {
     vec3 position;

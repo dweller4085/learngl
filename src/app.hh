@@ -1,9 +1,10 @@
 #ifndef __learngl_app__
-#define __learngl_app___
+#define __learngl_app__
 
 #include <glad/glad.h>
 #include <glfw/glfw3.h>
 
+#include "camera.hh"
 #include "render.hh"
 
 struct t_app {
