@@ -188,9 +188,9 @@ namespace {
     
     char const * tile_path = "w:\\learngl\\resources\\tile.jpg";
     char const * concrete_path = "w:\\learngl\\resources\\concrete.jpg";
-    char const * crate_path = "w:\\learngl\\resources\\crate.jpg";
+    char const * paving_path = "w:\\learngl\\resources\\paving.jpg";
     
-    uint tile, concrete, crate;
+    uint tile, concrete, paving;
 }
 
 function t_app::init() -> void {
@@ -200,7 +200,7 @@ function t_app::init() -> void {
     background_color = { 0.2f, 0.2f, 0.2f };
     
     camera = {
-        .position = { 0.f, 0.f, 0.f },
+        .position = { 0.f, -3.f, 0.f },
         .velocity = { 0.f, 0.f, 0.f },
         .pitch = 0.f,
         .yaw = 0.f,
@@ -249,19 +249,61 @@ function t_app::init() -> void {
     
     tile = create_texture(tile_path);
     concrete = create_texture(concrete_path);
-    crate = create_texture(crate_path);
+    paving = create_texture(paving_path);
     
-    t_node static nodes[1] = {
-        { .mesh = &box, .texture = tile, .shader = simple_shader, .world_transform = glm::identity<mat4>() },
-        // { .mesh = &box, .texture = concrete, .shader = simple_shader, .world_transform = glm::identity<mat4>() },
-        // { .mesh = &box, .texture = crate, .shader = simple_shader, .world_transform = glm::identity<mat4>() },
+    t_node static nodes[3] = {
+        { .texture = tile },
+        { .texture = concrete },
+        { .texture = paving },
     };
     
-    scene = { .nodes = { .ptr = nodes, .len = 1 } };
+    for (int i = 0; i < 3; i += 1) {
+        float theta = i * tau / 3.f + kappa;
+        float radius = 1.5f;
+        
+        vec2 xy = {
+            std::cosf(theta),
+            std::sinf(theta)
+        };
+        
+        nodes[i].position = { xy * radius, 0.f };
+        
+        nodes[i].mesh= &box;
+        nodes[i].shader = simple_shader;
+        nodes[i].orientation = glm::angleAxis(0.f, vec3 {0.f, 0.f, 1.f});
+    }
+    
+    scene = { .nodes = { .ptr = nodes, .len = 3 } };
 }
 
 function t_app::update(float dt) -> void {
     camera.update(dt);
+    
+    scene.nodes[0].orientation = glm::angleAxis(
+        0.5f * ::now(),
+        glm::normalize(vec3 { 0.2f, 0.4f, 0.7f })
+    );
+    
+    scene.nodes[0].position = {
+        scene.nodes[0].position.x,
+        scene.nodes[0].position.y,
+        0.5f * std::sinf(0.5f * ::now()),
+    };
+    
+    scene.nodes[1].orientation = glm::angleAxis(
+        -0.35f * ::now(),
+        glm::normalize(vec3 { 0.f, 0.8f, 1.f })
+    );
+    
+    let q = glm::angleAxis(
+        pi * (0.5f * std::sinf(0.7f * ::now()) + 0.5f),
+        vec3 { 0.f, 0.f, 1.f }
+    );
+    
+    scene.nodes[2].orientation = glm::angleAxis(
+        pi * (0.5f * std::sinf(-0.7f * ::now()) + 0.5f),
+        q * vec3 { 1.f, 0.f, 0.f }
+    ) * q;
 }
 
 function t_app::render() -> void {
@@ -294,8 +336,9 @@ function t_app::run() -> int {
 }
 
 function t_app::terminate() -> int {
+    // TODO clean up vao's, vbo's, textures
+    // though what's the point if we're shutting down on the next line anyway
     glfwTerminate();
-    
     return 0;
 }
 

@@ -13,7 +13,12 @@ function t_node::render(t_camera __in * camera) -> void {
         glGetUniformLocation(shader, "mvp"),
         1,
         GL_FALSE,
-        glm::value_ptr(camera->projection * camera->view * world_transform)
+        glm::value_ptr(
+            camera->projection *
+            camera->view *
+            glm::translate(glm::identity<mat4>(), position) *
+            glm::mat4_cast(orientation)
+        )
     );
     
     glBindVertexArray(mesh->vao);

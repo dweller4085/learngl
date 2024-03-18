@@ -20,7 +20,8 @@ struct t_node {
     t_mesh * mesh;
     uint texture;
     uint shader;
-    mat4 world_transform;
+    vec3 position;
+    glm::quat orientation;
 };
 
 struct t_scene {
