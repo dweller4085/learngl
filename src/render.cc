@@ -278,8 +278,8 @@ function create_icosphere_mesh() -> t_mesh {
 }
 
 function create_sphere_mesh(uint longitude_segments, uint latitude_segments) -> t_mesh {
-    t_vertex static vertices[1024]; // horrid way to do this but it'll do for now
-    uint32 static indices[1024];
+    t_vertex static vertices[4 * 1024] = {}; // horrid way to do this but it'll do for now
+    uint32 static indices[4 * 1024] = {};
     
     u64 vertex = 0;
     u64 index = 0;

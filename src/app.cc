@@ -11,8 +11,6 @@ namespace {
     char const * concrete_path = "w:\\learngl\\resources\\concrete.jpg";
     char const * paving_path = "w:\\learngl\\resources\\paving.jpg";
     char const * earth_path = "w:\\learngl\\resources\\earth.jpg";
-    
-    t_texture tile, concrete, paving, earth;
 }
 
 function t_app::init() -> void {
@@ -39,7 +37,7 @@ function t_app::init() -> void {
     m_assert(glfwInit());
     
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     
@@ -69,9 +67,9 @@ function t_app::init() -> void {
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     
-    t_mesh static box = create_box_mesh();
-    t_mesh static sphere = create_sphere_mesh(16, 16);
-    uint static basic_shader = create_basic_shader();
+    box = create_box_mesh();
+    sphere = create_sphere_mesh(16, 16);
+    uint basic_shader = create_basic_shader();
     
     tile = create_texture(tile_path);
     concrete = create_texture(concrete_path);

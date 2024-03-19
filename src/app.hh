@@ -25,6 +25,9 @@ struct t_app {
     int height;
     
     vec3 background_color;
+    
+    t_mesh box, sphere;
+    t_texture tile, concrete, paving, earth;
 };
 
 extern function main(int argc, char ** argv) -> int;
