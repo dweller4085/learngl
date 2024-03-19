@@ -40,6 +40,6 @@ function create_basic_shader() -> t_shader;
 function create_mesh(t_slice<t_vertex> vertices, t_slice<uint32> indices) -> t_mesh;
 function create_box_mesh() -> t_mesh;
 function create_icosphere_mesh() -> t_mesh;
-function create_sphere_mesh(uint x, uint y) -> t_mesh;
+function create_sphere_mesh(uint longitude_segments, uint latitude_segments) -> t_mesh;
 
 #endif // __learngl_render__

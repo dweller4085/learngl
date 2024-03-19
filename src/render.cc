@@ -277,42 +277,40 @@ function create_icosphere_mesh() -> t_mesh {
     return {};
 }
 
-function create_sphere_mesh(uint xSegments, uint ySegments) -> t_mesh {
-    
+function create_sphere_mesh(uint longitude_segments, uint latitude_segments) -> t_mesh {
     t_vertex static vertices[1024]; // horrid way to do this but it'll do for now
     uint32 static indices[1024];
     
     u64 vertex = 0;
     u64 index = 0;
     
-    for (unsigned int y = 0; y <= ySegments; ++y)
-    {
-        for (unsigned int x = 0; x <= xSegments; ++x)
-        {
-            float xSegment = (float)x / (float)xSegments;
-            float ySegment = (float)y / (float)ySegments;
-            float xPos = std::cosf(xSegment * tau) * std::sinf(ySegment * pi);
-            float zPos = std::cosf(ySegment * pi);
-            float yPos = std::sinf(xSegment * tau) * std::sinf(ySegment * pi);
+    for (uint y = 0; y <= latitude_segments; y += 1) {
+        for (uint x = 0; x <= longitude_segments; x += 1) {
+            float x_segment = (float) x / (float) longitude_segments;
+            float y_segment = (float) y / (float) latitude_segments;
             
+            let position = vec3 {
+                std::cosf(x_segment * tau) * std::sinf(y_segment * pi),
+                std::sinf(x_segment * tau) * std::sinf(y_segment * pi),
+                std::cosf(y_segment * pi),
+            };
+
             vertices[vertex++] = {
-                .position = glm::normalize(vec3 { xPos, yPos, zPos }),
-                .uv = { xSegment, ySegment }
+                .position = glm::normalize(position),
+                .uv = { x_segment, y_segment }
             };
         }
     }
 
-    for (int y = 0; y < ySegments; ++y)
-    {
-        for (int x = 0; x < xSegments; ++x)
-        {
-            indices[index++] = (y + 1) * (xSegments + 1) + x;
-            indices[index++] = y       * (xSegments + 1) + x + 1;
-            indices[index++] = y       * (xSegments + 1) + x;
+    for (uint y = 0; y < latitude_segments; y += 1) {
+        for (uint x = 0; x < longitude_segments; x += 1) {
+            indices[index++] = (y + 1) * (longitude_segments + 1) + x;
+            indices[index++] = y * (longitude_segments + 1) + x + 1;
+            indices[index++] = y * (longitude_segments + 1) + x;
 
-            indices[index++] = (y + 1) * (xSegments + 1) + x;
-            indices[index++] = (y + 1) * (xSegments + 1) + x + 1;
-            indices[index++] = y       * (xSegments + 1) + x + 1;
+            indices[index++] = (y + 1) * (longitude_segments + 1) + x;
+            indices[index++] = (y + 1) * (longitude_segments + 1) + x + 1;
+            indices[index++] = y * (longitude_segments + 1) + x + 1;
         }
     }
     
