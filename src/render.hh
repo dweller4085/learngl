@@ -37,7 +37,9 @@ struct t_scene {
 function create_texture(char const * path) -> t_texture;
 function create_shader(char const * vertex, char const * fragment) -> t_shader;
 function create_basic_shader() -> t_shader;
+function create_mesh(t_slice<t_vertex> vertices, t_slice<uint32> indices) -> t_mesh;
 function create_box_mesh() -> t_mesh;
-function create_icosahedron() -> t_mesh;
+function create_icosphere_mesh() -> t_mesh;
+function create_sphere_mesh(uint x, uint y) -> t_mesh;
 
 #endif // __learngl_render__

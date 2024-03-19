@@ -24,11 +24,11 @@ function t_node::render(t_camera __in * camera) -> void {
     
     glBindVertexArray(mesh->vao);
     
-    // if (mesh->indices.ptr) {
-    //     glDrawElements(GL_TRIANGLES, mesh->indices.length(), GL_UNSIGNED_INT, 0);
-    // } else {
+    if (mesh->indices.ptr) {
+        glDrawElements(GL_TRIANGLES, mesh->indices.length(), GL_UNSIGNED_INT, 0);
+    } else {
         glDrawArrays(GL_TRIANGLES, 0, mesh->vertices.length());
-    // }
+    }
 }
 
 function t_scene::render(t_camera __in * camera) -> void {
@@ -140,6 +140,47 @@ function create_basic_shader() -> uint {
     return create_shader(vertex, fragment);
 }
 
+function create_mesh(t_slice<t_vertex> vertices, t_slice<uint32> indices) -> t_mesh {
+    uint vbo = 0;
+    uint vao = 0;
+    uint ebo = 0;
+    
+    {
+        glGenVertexArrays(1, &vao);
+        glGenBuffers(1, &vbo);
+        glGenBuffers(1, &ebo);
+        
+        glBindVertexArray(vao);
+        
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, vbo);
+            glBufferData(GL_ARRAY_BUFFER, sizeof(t_vertex) * vertices.length(), vertices, GL_STATIC_DRAW);
+            
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint32) * indices.length(), indices, GL_STATIC_DRAW);
+            
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
+            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (1 * sizeof(vec3)));
+            
+            glEnableVertexAttribArray(0);
+            glEnableVertexAttribArray(1);
+            
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+        }
+        
+        glBindVertexArray(0);
+    }
+    
+    return {
+        .vao = vao,
+        .vbo = vbo,
+        .ebo = ebo,
+        .vertices = vertices,
+        .indices = indices,
+    };
+}
+
+
 function create_box_mesh() -> t_mesh {
     t_vertex static vertices[36] = {
         
@@ -204,45 +245,76 @@ function create_box_mesh() -> t_mesh {
         
     };
     
+    return create_mesh({ vertices, 36 }, {});
+}
+
+function create_icosphere_mesh() -> t_mesh {
+    float phi = 1.618033988f;
+    
+    t_vertex static vertices[] = {
+        { { 0.f, 1.f, phi }, { 0.f, 0.f } },
+        { { 0.f, -1.f, phi }, { 0.f, 0.f } },
+        { { 0.f, 1.f, -phi }, { 0.f, 0.f } },
+        { { 0.f, -1.f, -phi }, { 0.f, 0.f } },
+        
+        { { 1.f, phi, 0.f }, { 0.f, 0.f } },
+        { { -1.f, phi, 0.f }, { 0.f, 0.f } },
+        { { 1.f, -phi, 0.f }, { 0.f, 0.f } },
+        { { -1.f, -phi, 0.f }, { 0.f, 0.f } },
+        
+        { { phi, 0.f, 1.f }, { 0.f, 0.f } },
+        { { -phi, 0.f, 1.f }, { 0.f, 0.f } },
+        { { phi, 0.f, -1.f }, { 0.f, 0.f } },
+        { { -phi, 0.f, -1.f }, { 0.f, 0.f } },
+    };
+    
     uint32 static indices[] = {
         {}
     };
     
-    uint vbo = 0;
-    uint vao = 0;
-    uint ebo = 0;
     
+    // TODO without any lighting and proper uv mapping this would look.. not very good
+    return {};
+}
+
+function create_sphere_mesh(uint xSegments, uint ySegments) -> t_mesh {
+    
+    t_vertex static vertices[1024]; // horrid way to do this but it'll do for now
+    uint32 static indices[1024];
+    
+    u64 vertex = 0;
+    u64 index = 0;
+    
+    for (unsigned int y = 0; y <= ySegments; ++y)
     {
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
-        
-        glBindVertexArray(vao);
-        
+        for (unsigned int x = 0; x <= xSegments; ++x)
         {
-            glBindBuffer(GL_ARRAY_BUFFER, vbo);
-            glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+            float xSegment = (float)x / (float)xSegments;
+            float ySegment = (float)y / (float)ySegments;
+            float xPos = std::cosf(xSegment * tau) * std::sinf(ySegment * pi);
+            float zPos = std::cosf(ySegment * pi);
+            float yPos = std::sinf(xSegment * tau) * std::sinf(ySegment * pi);
             
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-            
-            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
-            glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (1 * sizeof(vec3)));
-            
-            glEnableVertexAttribArray(0);
-            glEnableVertexAttribArray(1);
-            
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            vertices[vertex++] = {
+                .position = glm::normalize(vec3 { xPos, yPos, zPos }),
+                .uv = { xSegment, ySegment }
+            };
         }
-        
-        glBindVertexArray(0);
+    }
+
+    for (int y = 0; y < ySegments; ++y)
+    {
+        for (int x = 0; x < xSegments; ++x)
+        {
+            indices[index++] = (y + 1) * (xSegments + 1) + x;
+            indices[index++] = y       * (xSegments + 1) + x;
+            indices[index++] = y       * (xSegments + 1) + x + 1;
+
+            indices[index++] = (y + 1) * (xSegments + 1) + x;
+            indices[index++] = y       * (xSegments + 1) + x + 1;
+            indices[index++] = (y + 1) * (xSegments + 1) + x + 1;
+        }
     }
     
-    return {
-        .vao = vao,
-        .vbo = vbo,
-        .ebo = ebo,
-        .vertices = { .ptr = (t_vertex *) vertices, .len = 36 },
-        .indices = {},
-    };
+    return create_mesh({ vertices, vertex }, { indices, index });
 }

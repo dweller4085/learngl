@@ -10,8 +10,9 @@ namespace {
     char const * tile_path = "w:\\learngl\\resources\\tile.jpg";
     char const * concrete_path = "w:\\learngl\\resources\\concrete.jpg";
     char const * paving_path = "w:\\learngl\\resources\\paving.jpg";
+    char const * earth_path = "w:\\learngl\\resources\\earth.jpg";
     
-    t_texture tile, concrete, paving;
+    t_texture tile, concrete, paving, earth;
 }
 
 function t_app::init() -> void {
@@ -64,21 +65,24 @@ function t_app::init() -> void {
     m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
     
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    // glEnable(GL_CULL_FACE);
+    // glCullFace(GL_BACK);
+    // glFrontFace(GL_CCW);
     
     t_mesh static box = create_box_mesh();
+    t_mesh static sphere = create_sphere_mesh(16, 16);
     uint static basic_shader = create_basic_shader();
     
     tile = create_texture(tile_path);
     concrete = create_texture(concrete_path);
     paving = create_texture(paving_path);
+    earth = create_texture(earth_path);
     
-    t_node static nodes[3] = {
+    t_node static nodes[4] = {
         { .texture = tile },
         { .texture = concrete },
         { .texture = paving },
+        {}
     };
     
     for (int i = 0; i < 3; i += 1) {
@@ -94,14 +98,35 @@ function t_app::init() -> void {
         
         nodes[i].mesh= &box;
         nodes[i].shader = basic_shader;
-        nodes[i].orientation = glm::angleAxis(0.f, vec3 {0.f, 0.f, 1.f});
+        nodes[i].orientation = {};
     }
     
-    scene = { .nodes = { .ptr = nodes, .len = 3 } };
+    nodes[3] = {
+        .mesh = &sphere,
+        .texture = earth,
+        .shader = basic_shader,
+        .position = {},
+        .orientation = glm::angleAxis(0.15f, vec3 {0.f, 1.f, 0.f}),
+    };
+    
+    
+    scene = { .nodes = { .ptr = nodes, .len = sizeof(nodes) / sizeof(t_node) } };
 }
 
 function t_app::update(float dt) -> void {
     camera.update(dt);
+    
+    for (int i = 0; i < 3; i += 1) {
+        float theta = i * tau / 3.f + kappa + 0.33f * ::now();
+        float radius = 2.3f;
+        
+        vec2 xy = {
+            std::cosf(theta),
+            std::sinf(theta)
+        };
+        
+        scene.nodes[i].position = { xy * radius, 0.f };
+    }
     
     scene.nodes[0].orientation = glm::angleAxis(
         0.5f * ::now(),
@@ -128,6 +153,11 @@ function t_app::update(float dt) -> void {
         pi * (0.5f * std::sinf(-0.7f * ::now()) + 0.5f),
         q * vec3 { 1.f, 0.f, 0.f }
     ) * q;
+    
+    scene.nodes[3].orientation *= glm::angleAxis(
+        0.33f * dt,
+        vec3 { 0.f, 0.f, 1.f }
+    );
 }
 
 function t_app::render() -> void {
@@ -135,6 +165,7 @@ function t_app::render() -> void {
     
     glClearColor(background_color.r, background_color.b, background_color.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     
     
@@ -162,8 +193,6 @@ function t_app::run() -> int {
 }
 
 function t_app::terminate() -> int {
-    // TODO clean up vao's, vbo's, textures
-    // though what's the point if we're shutting down on the next line anyway
     glfwTerminate();
     return 0;
 }
