@@ -24,14 +24,11 @@ src\*.cc ^
 /Fo"bin\\" ^
 /Fd"bin\\"
 
-rem lib\glad\src\glad.c ^
-
 link.exe ^
 /nologo ^
 /debug:full ^
 /libpath:"lib\\glfw\\build\\src\\Debug" ^
 /libpath:"lib\\glm\\build\\glm\\Debug" ^
-/libpath:"lib\\stb\\bin\\" ^
 /machine:x64 ^
 /pdb:"bin\\%name%.pdb" ^
 /out:"bin\\%name%.exe" ^
@@ -45,5 +42,4 @@ user32.lib ^
 opengl32.lib ^
 glfw3.lib ^
 glm.lib ^
-stb_image.lib ^
 bin\*.obj
