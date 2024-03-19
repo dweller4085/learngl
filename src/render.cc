@@ -307,12 +307,12 @@ function create_sphere_mesh(uint xSegments, uint ySegments) -> t_mesh {
         for (int x = 0; x < xSegments; ++x)
         {
             indices[index++] = (y + 1) * (xSegments + 1) + x;
-            indices[index++] = y       * (xSegments + 1) + x;
             indices[index++] = y       * (xSegments + 1) + x + 1;
+            indices[index++] = y       * (xSegments + 1) + x;
 
             indices[index++] = (y + 1) * (xSegments + 1) + x;
-            indices[index++] = y       * (xSegments + 1) + x + 1;
             indices[index++] = (y + 1) * (xSegments + 1) + x + 1;
+            indices[index++] = y       * (xSegments + 1) + x + 1;
         }
     }
     

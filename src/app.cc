@@ -65,9 +65,9 @@ function t_app::init() -> void {
     m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
     
     glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE);
-    // glCullFace(GL_BACK);
-    // glFrontFace(GL_CCW);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
     
     t_mesh static box = create_box_mesh();
     t_mesh static sphere = create_sphere_mesh(16, 16);
