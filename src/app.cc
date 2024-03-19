@@ -7,10 +7,10 @@
 namespace {
     inline function now() -> float { return static_cast<float>(glfwGetTime()); }
     
-    char const * tile_path = "w:\\learngl\\resources\\tile.jpg";
-    char const * concrete_path = "w:\\learngl\\resources\\concrete.jpg";
-    char const * paving_path = "w:\\learngl\\resources\\paving.jpg";
-    char const * earth_path = "w:\\learngl\\resources\\earth.jpg";
+    char const * tile_path = "..\\resources\\tile.jpg";
+    char const * concrete_path = "..\\resources\\concrete.jpg";
+    char const * paving_path = "..\\resources\\paving.jpg";
+    char const * earth_path = "..\\resources\\earth.jpg";
 }
 
 function t_app::init() -> void {
