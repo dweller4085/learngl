@@ -76,7 +76,7 @@ function t_camera::update(float dt) -> void {
             let speed = glm::length(velocity);
             
             if (speed > epsilon) {
-                velocity = glm::normalize(velocity) * m_clamp(speed - decel_rate * dt, 0.f, max_speed * (shift ? 0.5f : 1.f));
+                velocity = glm::normalize(velocity) * m_clamp(speed - decel_rate * dt, 0.f, max_speed * (shift ? 0.33f : 1.f));
             }
             
             position += velocity * dt;

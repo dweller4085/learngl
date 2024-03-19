@@ -2,195 +2,16 @@
 #include <cstdio>
 #include <cmath>
 
-#include <stb/stb_image.h>
-
 #include "app.hh"
 
 namespace {
-    function create_texture(char const * path) -> uint {
-        uint texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        
-        int width, height, n_channels;
-        let data = stbi_load(path, &width, &height, &n_channels, 0);
-        m_assert(data);
-        
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        
-        stbi_image_free(data);
-        
-        return texture;
-    }
-
-    function create_simple_shader() -> uint {
-        char static const * vertex_shader_src = R"(
-            #version 450 core
-            
-            layout (location = 0) in vec3 v_pos;
-            layout (location = 1) in vec2 v_tex;
-            
-            out vec2 f_tex;
-            
-            uniform mat4 mvp;
-            
-            void main() {
-                gl_Position = mvp * vec4(v_pos, 1.0);
-                f_tex = v_tex;
-            }
-        )";
-        
-        char static const * fragment_shader_src = R"(
-            #version 450 core
-            
-            in vec2 f_tex;
-            
-            out vec4 color;
-            
-            uniform sampler2D f_texture;
-            
-            void main() {
-                color = texture(f_texture, f_tex);
-            }
-        )";
-        
-        let vertex_shader = [=] {
-            let vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vertex_shader, 1, &vertex_shader_src, null);
-            glCompileShader(vertex_shader);
-            
-            int ok = 0;
-            glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &ok);
-            m_assert(ok);
-            
-            return vertex_shader;
-        } ();
-        
-        let fragment_shader = [=] {
-            let fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fragment_shader, 1, &fragment_shader_src, null);
-            glCompileShader(fragment_shader);
-            
-            int ok = 0;
-            glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &ok);
-            m_assert(ok);
-            
-            return fragment_shader;
-        } ();
-        
-        let shader_program = [=] {
-            let shader_program = glCreateProgram();
-            glAttachShader(shader_program, vertex_shader);
-            glAttachShader(shader_program, fragment_shader);
-            glLinkProgram(shader_program);
-            
-            int ok = 0;
-            glGetProgramiv(shader_program, GL_LINK_STATUS, &ok);
-            m_assert(ok);
-            
-            return shader_program;
-        } ();
-        
-        glUseProgram(shader_program);
-        glUniform1i(glGetUniformLocation(shader_program, "f_texture"), 0);
-        
-        glDeleteShader(vertex_shader);
-        glDeleteShader(fragment_shader);
-        
-        return shader_program;
-    }
-
-    function create_box_mesh() -> t_mesh {
-        float static vertices[36 * 5] = {
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-            0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-            -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-            -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        };
-        
-        uint vbo = 0;
-        uint vao = 0;
-        
-        {
-            glGenVertexArrays(1, &vao);
-            glBindVertexArray(vao);
-            
-            {
-                glGenBuffers(1, &vbo);
-                glBindBuffer(GL_ARRAY_BUFFER, vbo);
-                
-                glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-                
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) 0);
-                glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(t_vertex), (void *) (1 * sizeof(vec3)));
-                
-                glEnableVertexAttribArray(0);
-                glEnableVertexAttribArray(1);
-                
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-            }
-            
-            glBindVertexArray(0);
-        }
-        
-        return {
-            .vao = vao,
-            .vertices = { .ptr = (t_vertex *) vertices, .len = 36 },
-        };
-    }
-    
-    inline function now() -> float {
-        return static_cast<float>(glfwGetTime());
-    }
+    inline function now() -> float { return static_cast<float>(glfwGetTime()); }
     
     char const * tile_path = "w:\\learngl\\resources\\tile.jpg";
     char const * concrete_path = "w:\\learngl\\resources\\concrete.jpg";
     char const * paving_path = "w:\\learngl\\resources\\paving.jpg";
     
-    uint tile, concrete, paving;
+    t_texture tile, concrete, paving;
 }
 
 function t_app::init() -> void {
@@ -243,9 +64,12 @@ function t_app::init() -> void {
     m_assert(gladLoadGLLoader((GLADloadproc) glfwGetProcAddress));
     
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
     
     t_mesh static box = create_box_mesh();
-    uint static simple_shader = create_simple_shader();
+    uint static basic_shader = create_basic_shader();
     
     tile = create_texture(tile_path);
     concrete = create_texture(concrete_path);
@@ -269,7 +93,7 @@ function t_app::init() -> void {
         nodes[i].position = { xy * radius, 0.f };
         
         nodes[i].mesh= &box;
-        nodes[i].shader = simple_shader;
+        nodes[i].shader = basic_shader;
         nodes[i].orientation = glm::angleAxis(0.f, vec3 {0.f, 0.f, 1.f});
     }
     
@@ -311,6 +135,8 @@ function t_app::render() -> void {
     
     glClearColor(background_color.r, background_color.b, background_color.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    
     
     scene.render(&camera);
     
