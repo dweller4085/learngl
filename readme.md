@@ -8,13 +8,13 @@ Clone this repo together with its submodules.
 $ git clone --recurse-submodules "https://github.com/dweller4085/learngl.git" .
 ```
 
-Build **glfw** and **glm** with CMake + Visual Studio into their default locations.
+Build **glfw** and **glm** with CMake + Visual Studio 2022 into their default locations.
 
 **Make sure glfw is compiled with `/MDd` compiler option!**
 
 You should end up with `glfw3.lib` at `lib\glfw\build\src\Debug`, and `glm.lib` at `lib\glm\build\src\Debug`.
 
-Run ` $ build.bat ` and it should build the executable at `bin\learngl.exe`.
+Run ` $ build.bat ` under the `x64 Native Tools Command Prompt for VS 2022` and it should build the executable at `bin\learngl.exe`.
 
 ## Controls
 `esc`: toggle camera movement on and off (enable / disable cursor)
