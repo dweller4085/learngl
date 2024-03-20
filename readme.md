@@ -18,8 +18,6 @@ You should end up with `glfw3.lib` at `lib\glfw\build\src\Debug`, and `glm.lib` 
 
 Run ` $ build.bat ` under the `x64 Native Tools Command Prompt for VS 2022` and it should build the executable at `bin\learngl.exe`.
 
-If you get assertion failures on launch, try running the executable with you current working directory being exactly `learngl\bin\`, or change the texture paths in `app.cc` to absolute paths.
-
 ## Controls
 `esc`: toggle camera movement on and off (enable / disable cursor)
 
