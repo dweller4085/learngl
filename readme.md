@@ -19,15 +19,15 @@ You should end up with `glfw3.lib` at `lib\glfw\build\src\Debug`, and `glm.lib` 
 Run ` $ build.bat ` under the `x64 Native Tools Command Prompt for VS 2022` and it should build the executable at `bin\learngl.exe`.
 
 ## Controls
-`esc`: toggle camera movement on and off (enable / disable cursor)
+`esc` toggle camera movement on and off (enable / disable cursor)
 
-`w` `a` `s` `d`: move forwards, left, backwards, right
+`w` `a` `s` `d` move forwards, left, backwards, right
 
-`left shift`: hold to move at 0.33 default speed
+`left shift` hold to move at 0.33 default speed
 
-`left ctrl`: move down
+`left ctrl` move down
 
-`space`: move up
+`space` move up
 
 ---
 
