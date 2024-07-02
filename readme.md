@@ -29,6 +29,11 @@ Run ` $ build.bat ` under the `x64 Native Tools Command Prompt for VS 2022` and 
 
 `space` move up
 
+## Todo ...
+- [ ] Actual shading (Blinn-Phong)
+- [ ] Skybox
+- [ ] Shadow mapping...
+
 ---
 
 https://www.youtube.com/watch?v=KFrzDdlsnJo
